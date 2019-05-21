@@ -1,0 +1,29 @@
+{
+  "name": "static-server",
+  "version": "1.0.0",
+  "description": "简易静态服务器",
+  "main": "nodejs.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node staticServer.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yeyan1996/static-server.git"
+  },
+  "keywords": [
+    "nodejs"
+  ],
+  "author": "yeyan1996",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yeyan1996/static-server/issues"
+  },
+  "homepage": "https://github.com/yeyan1996/static-server#readme",
+  "devDependencies": {
+    "@types/mime": "^2.0.1",
+    "@types/node": "^12.0.2",
+    "mime": "^2.cnpm i4.3",
+    "zlib": "^1.0.5"
+  }
+}
