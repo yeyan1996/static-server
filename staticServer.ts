@@ -33,12 +33,10 @@ class MyServer extends http.Server {
             try {
                 this.handleRequest(req, res)
                 if (!this.checkLastModified(req, res)){
-                    this.sendFile(req, res)
                     return
                 }
                 this.handleEncoding(req, res)
                 if (!this.checkEtag(req, res)) {
-                    this.sendFile(req, res)
                     return
                 }
                 this.sendFile(req, res)

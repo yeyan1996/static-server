@@ -43,12 +43,10 @@ var MyServer = /** @class */ (function (_super) {
             try {
                 _this.handleRequest(req, res);
                 if (!_this.checkLastModified(req, res)) {
-                    _this.sendFile(req, res);
                     return;
                 }
                 _this.handleEncoding(req, res);
                 if (!_this.checkEtag(req, res)) {
-                    _this.sendFile(req, res);
                     return;
                 }
                 _this.sendFile(req, res);
