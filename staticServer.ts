@@ -9,8 +9,8 @@ import crypto from 'crypto'
 import stream from 'stream'
 
 const PORT: number = 3001
-const GzipRE: RegExp = /\bgzip\b/
-const DeflateRE: RegExp = /\bdeflate\b/
+const GZIP_RE: RegExp = /\bgzip\b/
+const DEFLATE_RE: RegExp = /\bdeflate\b/
 
 
 class MyServer extends http.Server {
@@ -32,13 +32,11 @@ class MyServer extends http.Server {
         this.on('request', (req, res) => {
             try {
                 this.handleRequest(req, res)
-                if (!this.checkLastModified(req, res)){
-                    return
-                }
+                if (!this.checkLastModified(req, res))return
+
                 this.handleEncoding(req, res)
-                if (!this.checkEtag(req, res)) {
-                    return
-                }
+
+                if (!this.checkEtag(req, res)) return
                 this.sendFile(req, res)
             } catch (e) {
                 console.error(e)
@@ -68,10 +66,10 @@ class MyServer extends http.Server {
         let acceptEncoding: string | undefined = req.headers["accept-encoding"] as string | undefined
         if (!acceptEncoding || !this.readStream) throw new Error('找不到 url')
 
-        if (acceptEncoding.match(GzipRE)) {
+        if (acceptEncoding.match(GZIP_RE)) {
             res.setHeader("Content-Encoding", "gzip");
             this.readStream = this.readStream.pipe(zlib.createGzip())
-        } else if (acceptEncoding.match(DeflateRE)) {
+        } else if (acceptEncoding.match(DEFLATE_RE)) {
             res.setHeader("Content-Encoding", "deflate");
             this.readStream = this.readStream.pipe(zlib.createDeflate())
         }
