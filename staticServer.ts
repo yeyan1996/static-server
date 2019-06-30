@@ -31,7 +31,7 @@ class MyServer extends http.Server {
         // 监听 request 事件
         this.on('request', (req, res) => {
             try {
-                this.handleRequest(req, res)
+                this.handleRequest(req)
                 if (!this.checkLastModified(req, res))return
 
                 this.handleEncoding(req, res)
@@ -52,18 +52,18 @@ class MyServer extends http.Server {
     }
 
     // 根据请求寻找目标文件
-    handleRequest(req: http.IncomingMessage, res: http.ServerResponse) {
+    handleRequest(req: http.IncomingMessage) {
         console.log(req.url)
         if (!req.url) throw new Error('找不到 url')
         this.stat = fs.statSync(path.join(__dirname, req.url))
-        // 寻找静态资源
-        this.assetPath = req.url === '/' ? path.join(__dirname, '/nodejs.html') : path.join(__dirname, req.url)
+        // 当访问路径最后是以 / 结尾则返回主页，否则请求相应的静态资源
+        this.assetPath = req.url[req.url.length - 1] === '/' ? path.join(__dirname, '/index.html') : path.join(__dirname, req.url)
         this.readStream = fs.createReadStream(this.assetPath)
     }
 
     // 压缩相关
     handleEncoding(req: http.IncomingMessage, res: http.ServerResponse) {
-        let acceptEncoding: string | undefined = req.headers["accept-encoding"] as string | undefined
+        let acceptEncoding = req.headers["accept-encoding"] as (string | undefined)
         if (!acceptEncoding || !this.readStream) throw new Error('找不到 url')
 
         if (acceptEncoding.match(GZIP_RE)) {
@@ -80,7 +80,6 @@ class MyServer extends http.Server {
         // __dirname 为当前执行文件所在的完整目录名（绝对路径）eg. "C:\Users\007\Desktop\static-server"
         // process.cwd 为当前执行 node 命令的文件目录名（绝对路径）eg. "C:\Users\007\Desktop\static-server\nodejs.js"
         // __filename 为当前执行文件的完整目录名 （绝对路径） eg. "C:\Users\007\Desktop\static-server\nodejs.js"
-
         if (mime.getType(this.assetPath)) {
             res.setHeader("content-type", mime.getType(this.assetPath)! + ';charset=utf-8')
         }
@@ -91,8 +90,8 @@ class MyServer extends http.Server {
     // 协商缓存（文件最后修改时间）
     checkLastModified(req: http.IncomingMessage, res: http.ServerResponse): boolean {
         if (!this.stat) throw new Error('找不到文件')
-        let lastModified: string = this.stat.ctime.toUTCString()
-        let ifModifiedSince: string | undefined = req.headers['if-modified-since']
+        let lastModified = this.stat.ctime.toUTCString()
+        let ifModifiedSince = req.headers['if-modified-since']
         res.setHeader('last-modified', lastModified)
         if (lastModified === ifModifiedSince) {
             res.statusCode = 304
@@ -107,8 +106,8 @@ class MyServer extends http.Server {
         if (!this.readStream) throw new Error('找不到文件')
         let md5: crypto.Hash = crypto.createHash('md5')
         // 通过最后修改时间和文件大小计算出 etag
-        let etag: string = md5.update(this.stat!.ctime.toUTCString() + this.stat!.size).digest('hex');
-        let ifNoneMatch: string | undefined = req.headers['if-none-match']
+        let etag = md5.update(this.stat!.ctime.toUTCString() + this.stat!.size).digest('hex');
+        let ifNoneMatch = req.headers['if-none-match']
         res.setHeader('Etag', etag)
         if (ifNoneMatch === etag) {
             res.statusCode = 304

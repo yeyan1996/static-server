@@ -24,8 +24,8 @@ var mime_1 = __importDefault(require("mime"));
 var zlib_1 = __importDefault(require("zlib"));
 var crypto_1 = __importDefault(require("crypto"));
 var PORT = 3001;
-var GzipRE = /\bgzip\b/;
-var DeflateRE = /\bdeflate\b/;
+var GZIP_RE = /\bgzip\b/;
+var DEFLATE_RE = /\bdeflate\b/;
 var MyServer = /** @class */ (function (_super) {
     __extends(MyServer, _super);
     function MyServer() {
@@ -41,14 +41,12 @@ var MyServer = /** @class */ (function (_super) {
         // 监听 request 事件
         this.on('request', function (req, res) {
             try {
-                _this.handleRequest(req, res);
-                if (!_this.checkLastModified(req, res)) {
+                _this.handleRequest(req);
+                if (!_this.checkLastModified(req, res))
                     return;
-                }
                 _this.handleEncoding(req, res);
-                if (!_this.checkEtag(req, res)) {
+                if (!_this.checkEtag(req, res))
                     return;
-                }
                 _this.sendFile(req, res);
             }
             catch (e) {
@@ -64,13 +62,13 @@ var MyServer = /** @class */ (function (_super) {
         });
     };
     // 根据请求寻找目标文件
-    MyServer.prototype.handleRequest = function (req, res) {
+    MyServer.prototype.handleRequest = function (req) {
         console.log(req.url);
         if (!req.url)
             throw new Error('找不到 url');
         this.stat = fs_1.default.statSync(path_1.default.join(__dirname, req.url));
-        // 寻找静态资源
-        this.assetPath = req.url === '/' ? path_1.default.join(__dirname, '/nodejs.html') : path_1.default.join(__dirname, req.url);
+        // 当访问路径最后是以 / 结尾则返回主页，否则请求相应的静态资源
+        this.assetPath = req.url[req.url.length - 1] === '/' ? path_1.default.join(__dirname, '/index.html') : path_1.default.join(__dirname, req.url);
         this.readStream = fs_1.default.createReadStream(this.assetPath);
     };
     // 压缩相关
@@ -78,11 +76,11 @@ var MyServer = /** @class */ (function (_super) {
         var acceptEncoding = req.headers["accept-encoding"];
         if (!acceptEncoding || !this.readStream)
             throw new Error('找不到 url');
-        if (acceptEncoding.match(GzipRE)) {
+        if (acceptEncoding.match(GZIP_RE)) {
             res.setHeader("Content-Encoding", "gzip");
             this.readStream = this.readStream.pipe(zlib_1.default.createGzip());
         }
-        else if (acceptEncoding.match(DeflateRE)) {
+        else if (acceptEncoding.match(DEFLATE_RE)) {
             res.setHeader("Content-Encoding", "deflate");
             this.readStream = this.readStream.pipe(zlib_1.default.createDeflate());
         }
